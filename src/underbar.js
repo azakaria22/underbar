@@ -117,7 +117,7 @@
           result.push(x);
           passed = false;
         }
-      }
+      })
     }
     
     return result;
@@ -174,9 +174,10 @@
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
   	if(accumulator === undefined) {
-  	  return _.each(collection, iterator(collection[0], collection.slice(1)))
+  	  _.reduce(collection.slice(1), iterator, collection[0])
   	} 
-  	return _.each(collection, iterator(accumulator, number));
+  	_.each(collection, iterator(accumulator, number));
+  	return accumulator;
   };
 
   // Determine if the array or object contains a given value (using `===`).
