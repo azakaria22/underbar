@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="style.css">
+    <script src="jquery.js"></script>
+    <script src="data_generator.js"></script>
+    <script src="jquery.timeago.js"></script>
+    <img src="images.png" />
+  </head>
+  <body>
+    <header>
+      <h1 class='title'>Twittler</h1>
+    </header>
+    <section class="mainArea">
+      <button id="refresh">Refresh</button>
+    </section>
+    <section id="collectionsOfAllTweets">
+    </section>
+    <script type="text/javascript">
+      window.visitor;
+      $(document).ready(function(){
+        var mainTweetfeedController = (function() {
+          function arrayOfTotalTweets() {
+            return streams.home.length;
+          }
+
+          function checkForTweets() {
+            updatedCount = arrayOfTotalTweets();
+            setTimeout(function() {
+              checkForTweets();
+            }, 3000);
+          };
+
+          function tweetGraber(tweets) {
+            if (typeof tweets === 'undefined') {
+              var tweets = this.tweetsCurrentlyBeingDisplayed();
+            }
+          }
+          function tweetsCurrentlyBeingDisplayed() {
+            return $('.initial');
+          }
+          function loggingTweetsIntoFile(number) {
+            var currentValue = streams.home[number];
+            var $textOfCurrentTweet = $('<div class="initial"><p><a class="user">-@' + currentValue.user + '</a></p><p>' +
+            currentValue.message + '</p><p class="timeStamp">' +
+            $.timeago(currentValue.created_at) + '</p></div>');
+            $textOfCurrentTweet.prependTo($('#collectionsOfAllTweets'));
+          }
+          
+          function newTweetFeeder() {
+            for (var i = mainTweetCounter; i < updatedCount; i++) {
+              loggingTweetsIntoFile(i);
+              alreadyTweeted[i] = true;
+            }
+            mainTweetCounter = updatedCount;
+            this.userListRefresher($('.user'));
+            this.tweetGraber();
+          }
+
+          function userFilter(user) {
+            var tweetStr = this.tweetsCurrentlyBeingDisplayed();
+            for (var itr = 0; itr < tweetStr.length; itr++) {
+              var currentUser = tweetStr.eq(itr).find('.user').text().trim();
+              if (currentUser === user) {
+                tweetStr.eq(itr).addClass('filtered');
+              } else {
+                tweetStr.eq(itr).removeClass('filtered').slideUp();
+              }
+            }
+            this.tweetGraber($('.filtered'));
+          };
+
+          function clearFilter() {
+            $('.tweet').css('display', 'block');
+            $clearFilter.css('display', 'none');
+          }
+
+          function userListRefresher(users) {
+            users.click(function() {
+              var user = $(this).text().trim();
+              mainTweetfeedController.userFilter(user);
+            });
+          };
+
+          return {
+            arrayOfTotalTweets: arrayOfTotalTweets,
+            tweetsCurrentlyBeingDisplayed: tweetsCurrentlyBeingDisplayed,
+            tweetGraber: tweetGraber,
+            loggingTweetsIntoFile: loggingTweetsIntoFile,
+            newTweetFeeder: newTweetFeeder,
+            checkForTweets: checkForTweets,
+            userFilter: userFilter,
+            userListRefresher: userListRefresher,
+            clearFilter: clearFilter
+          };
+        })();
+        var updatedCount = 0;
+        var mainTweetCounter = mainTweetfeedController.arrayOfTotalTweets();
+        var alreadyTweeted = {};
+        var index = streams.home.length - 1;
+        while (index >= 0) {
+          var newTweet = mainTweetfeedController.loggingTweetsIntoFile(index);
+          alreadyTweeted[index] = true;
+          index -= 1;
+        }
+        mainTweetfeedController.checkForTweets();
+        mainTweetfeedController.userListRefresher($('.user'));
+        mainTweetfeedController.tweetGraber();
+        $('#refresh').click(function() {
+         mainTweetfeedController.newTweetFeeder();
+         mainTweetfeedController.clearFilter();
+       });
+      });
+    </script>
+  </body>
+</html>
