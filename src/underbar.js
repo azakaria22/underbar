@@ -174,10 +174,13 @@
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
   	if(accumulator === undefined) {
-  	  _.reduce(collection.slice(1), iterator, collection[0])
-  	} 
-  	_.each(collection, iterator(accumulator, number));
-  	return accumulator;
+  	  return _.reduce(collection.slice(1), iterator, collection[0]);
+  	} else {
+  	  _.each(collection, number => {
+  	    accumulator = iterator(accumulator, number);
+  	  });
+  	  return accumulator;
+  	}
   };
 
   // Determine if the array or object contains a given value (using `===`).
@@ -195,6 +198,13 @@
 
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
+    if(iterator === undefined) iterator = _.identity;
+    
+    return _.reduce(collection, (passes, item) => {
+      if(!passes) return false;
+
+      return Boolean(iterator(item));
+    }, true);
     // TIP: Try re-using reduce() here.
   };
 
@@ -202,6 +212,8 @@
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    if(iterator === undefined) iterator = _.identity;
+    return !_.every(collection, item => !iterator(item)); 
   };
 
 
@@ -224,11 +236,36 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    var args = [];
+    
+    _.each(arguments, ele => {
+      args.push(ele);
+    });
+    
+    _.each(args.slice(1), object => {
+      _.each(object, (value, key) => {
+        obj[key] = value;
+      });
+    });
+    return obj; 
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    var args = [];
+    _.each(arguments, ele => {
+      args.push(ele);
+    });
+    
+    _.each(args.slice(1), object => {
+      _.each(object, (value, key) => {
+        if(obj[key] === undefined) {
+          obj[key] = value;
+        }
+      });
+    });
+    return obj; 
   };
 
 
@@ -272,6 +309,16 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var inputtedArguments = {};
+    var result;
+    
+    return function() {
+      if(inputtedArguments[func] === undefined) {
+        result = func.apply(this, arguments);
+        inputtedArguments[func] = result;
+      }
+      return inputtedArguments[func];
+    };
   };
 
   // Delays a function for the given number of milliseconds, and then calls
