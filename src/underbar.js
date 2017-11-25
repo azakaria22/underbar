@@ -89,23 +89,18 @@
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array, isSorted, iterator) {
-    var result = []
-    var resultObj = {}
-    
+    var result = [];
     if(iterator === undefined) {
-      _.each(array, value => {
-        if(!(value in resultObj)){ 
-          resultObj[value] = value; 
-          result.push(value);
+    _.each(array, ele => {
+      var wasFound = result.indexOf(ele);
+        if(wasFound === -1) {
+          result.push(ele);
         }
       });
-      if(!isSorted) result.sort((a, b) => a - b);
-    } 
-    
-    else if(isSorted && iterator !== undefined){
+    } else if(isSorted) {
       var passed = false;
       var before = false;
-      _.each(array, x =>  {      
+      _.each(array, x => { 
         if(!iterator(x) && !before){ 
           result.push(x);
           before = true;
@@ -117,9 +112,15 @@
           result.push(x);
           passed = false;
         }
-      })
+      });
+    } else {
+      _.each(array, x => {
+        if(result[iterator(x)] === undefined) {
+          result.push(x);
+          result[iterator(x)] = true;
+        }
+      });
     }
-    
     return result;
   };
 
@@ -309,16 +310,18 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
-    var inputtedArguments = {};
-    var result;
+    var memo = {};
+    var slice = Array.prototype.slice;
     
     return function() {
-      if(inputtedArguments[func] === undefined) {
-        result = func.apply(this, arguments);
-        inputtedArguments[func] = result;
+      var args =  JSON.stringify(arguments);
+      var argsInput = slice.call(arguments);
+      if(args in memo) {
+        return memo[args];
+      } else {
+        return (memo[args] = func.apply(this, argsInput));
       }
-      return inputtedArguments[func];
-    };
+    }
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -328,6 +331,8 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    return setTimeout(function() {func.apply(this, args)}, wait);
   };
 
 
@@ -342,6 +347,14 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var copy = array.slice();
+    for(var i = copy.length - 1; i > 0; i--) {
+      var randomIndex = Math.floor(Math.random() * i);
+      var temp = copy[randomIndex];
+      copy[randomIndex] = copy[i];
+      copy[i] = temp;
+    }
+    return copy;
   };
 
 
